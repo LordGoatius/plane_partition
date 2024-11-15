@@ -67,6 +67,8 @@ pub fn matrix_to_set(matrix: &PlanePartition) -> PlanePartitonSet {
     let mut set = PlanePartitonSet::default();
     let len = matrix.len;
 
+    // We never really use anything more than n=20, and 20^3 = 8000, which really isn't that bad. 
+    // 8000 is baby number to big computer.
     for i in 0..len {
         for j in 0..len {
             for k in 0..len {

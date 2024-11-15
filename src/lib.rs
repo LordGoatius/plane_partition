@@ -1,5 +1,5 @@
 use plane_partition::{cardinality as card, is_plane_partition as is_pp, complement::complement as comp, rowmotion::{find_orbit, find_orbit_length, rowmotion as rowmotion_crate}, strongly_stable_to_totally_stable, PlanePartition};
-use pyo3::prelude::*;
+use pyo3::{exceptions::PyIndexError, prelude::*};
 
 pub mod plane_partition;
 
@@ -10,7 +10,7 @@ fn version() -> PyResult<String> {
 }
 
 /// Returns a string that represents the tikz diagram of a plane partition
-/// ```py
+/// ```python
 /// import plane_partitions as pp
 /// pp.to_tikz_diagram([[2,1],[1,0]])
 /// ```
@@ -33,7 +33,9 @@ fn to_tikz_diagram(matrix: Vec<Vec<u8>>) -> PyResult<String> {
 /// ```
 #[pyfunction]
 fn sspp_tp_tspp(matrix: Vec<Vec<u8>>) -> PyResult<Vec<Vec<u8>>> {
-    assert!(matrix.len() == matrix[0].len());
+    if matrix.len() != matrix[0].len() {
+        return Err(PyErr::new::<PyIndexError, &str>("not a a valid n x n list"));
+    }
     Ok(strongly_stable_to_totally_stable(&PlanePartition {
         len: matrix.len(),
         data: matrix,
@@ -49,6 +51,9 @@ fn sspp_tp_tspp(matrix: Vec<Vec<u8>>) -> PyResult<Vec<Vec<u8>>> {
 /// ```
 #[pyfunction]
 fn rowmotion(matrix: Vec<Vec<u8>>) -> PyResult<Vec<Vec<u8>>> {
+    if matrix.len() != matrix[0].len() {
+        return Err(PyErr::new::<PyIndexError, &str>("not a a valid n x n list"));
+    }
     Ok(rowmotion_crate(&PlanePartition {
         len: matrix.len(),
         data: matrix
@@ -68,6 +73,9 @@ fn cardinality(matrix: Vec<Vec<u8>>) -> PyResult<usize> {
 /// Should be more efficient than finding the whole orbit instead of just the length
 #[pyfunction]
 fn rowmotion_orbit_length(matrix: Vec<Vec<u8>>) -> PyResult<usize> {
+    if matrix.len() != matrix[0].len() {
+        return Err(PyErr::new::<PyIndexError, &str>("not a a valid n x n list"));
+    }
     Ok(find_orbit_length(&PlanePartition {
         len: matrix.len(),
         data: matrix
@@ -77,6 +85,9 @@ fn rowmotion_orbit_length(matrix: Vec<Vec<u8>>) -> PyResult<usize> {
 /// Returns the list of all partitions in an orbit of a plane partition under rowmotion
 #[pyfunction]
 fn rowmotion_orbit(matrix: Vec<Vec<u8>>) -> PyResult<Vec<Vec<Vec<u8>>>> {
+    if matrix.len() != matrix[0].len() {
+        return Err(PyErr::new::<PyIndexError, &str>("not a a valid n x n list"));
+    }
     Ok(find_orbit(&PlanePartition {
         len: matrix.len(),
         data: matrix
@@ -86,6 +97,9 @@ fn rowmotion_orbit(matrix: Vec<Vec<u8>>) -> PyResult<Vec<Vec<Vec<u8>>>> {
 /// Returns whether a list of lists is a valid plane partition 
 #[pyfunction]
 fn is_plane_partition(matrix: Vec<Vec<u8>>) -> PyResult<bool> {
+    if matrix.len() != matrix[0].len() {
+        return Err(PyErr::new::<PyIndexError, &str>("not a a valid n x n list"));
+    }
     Ok(is_pp(&PlanePartition {
         len: matrix.len(),
         data: matrix
@@ -95,6 +109,9 @@ fn is_plane_partition(matrix: Vec<Vec<u8>>) -> PyResult<bool> {
 /// Finds the complement of a plane partition
 #[pyfunction]
 fn complement(matrix: Vec<Vec<u8>>) -> PyResult<Vec<Vec<u8>>> {
+    if matrix.len() != matrix[0].len() {
+        return Err(PyErr::new::<PyIndexError, &str>("not a a valid n x n list"));
+    }
     Ok(comp(&PlanePartition {
         len: matrix.len(),
         data: matrix
