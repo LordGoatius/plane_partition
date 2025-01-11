@@ -5,8 +5,9 @@
 #
 name: CI
 
-on: [release, workflow_dispatch]
-
+on: 
+  release:
+    types: [published]
 
 permissions:
   contents: read
