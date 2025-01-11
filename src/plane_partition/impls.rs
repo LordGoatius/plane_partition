@@ -41,6 +41,15 @@ impl Display for PlanePartition {
     }
 }
 
+pub fn vec_to_pp(vec: Vec<Vec<u8>>, dims: (usize, usize, usize)) -> PlanePartition {
+    PlanePartition {
+        n: dims.0,
+        m: dims.1,
+        l: dims.2,
+        data: vec
+    }
+}
+
 impl Deref for PlanePartition {
     type Target = Vec<Vec<u8>>;
 

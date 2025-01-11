@@ -1,32 +1,46 @@
 use std::{collections::BTreeSet, usize};
 
-use itertools::Itertools;
+use pyo3::pyclass;
 
 pub mod impls;
 pub mod rowmotion;
 pub mod complement;
 
+/// Struct representing a plane partition.
+#[pyclass]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PlanePartition {
-    pub len: usize,
-    pub data: Vec<Vec<u8>>,
+    /// n is the len of data
+    pub n: usize,
+    /// m is the len of the nested vecs in data
+    pub m: usize,
+    /// l is the max of the flattened data
+    pub l: usize,
+    pub data: Vec<Vec<u8>>
 }
+
+//#[derive(Debug, Clone, PartialEq, Eq)]
+//pub struct PlanePartition {
+//    pub len: usize,
+//    pub data: Vec<Vec<u8>>,
+//}
 
 #[derive(Debug, Default, Clone)]
 pub struct PlanePartitonSet(BTreeSet<(u8, u8, u8)>);
 
 pub fn is_plane_partition(matrix: &PlanePartition) -> bool {
-    let len = matrix.len();
-    for i in 0..len {
-        for j in 0..len-1 {
+    let len_n = matrix.n;
+    let len_m = matrix.m;
+    for i in 0..len_n {
+        for j in 0..len_m-1 {
             if matrix[i][j] < matrix[i][j+1] {
                 return false;
             }
         }
     }
 
-    for j in 0..len {
-        for i in 0..len-1 {
+    for j in 0..len_n {
+        for i in 0..len_m-1 {
             if matrix[i][j] < matrix[i+1][j] {
                 return false;
             }
@@ -43,8 +57,8 @@ pub fn check_point_in_matrix(point: (u8, u8, u8), matrix: &PlanePartition) -> bo
 pub fn cardinality(matrix: &PlanePartition) -> usize {
     matrix.clone()
         .into_iter()
-        .map(|x| x.into_iter().map(|x| x as usize).collect_vec())
         .flatten()
+        .map(|x| x as usize)
         .sum::<usize>()
 }
 
@@ -65,13 +79,15 @@ pub fn s3_one_point(point: (u8, u8, u8)) -> [(u8, u8, u8); 6] {
 
 pub fn matrix_to_set(matrix: &PlanePartition) -> PlanePartitonSet {
     let mut set = PlanePartitonSet::default();
-    let len = matrix.len;
+    let len_n = matrix.n;
+    let len_m = matrix.m;
+    let len_l = matrix.l;
 
     // We never really use anything more than n=20, and 20^3 = 8000, which really isn't that bad. 
     // 8000 is baby number to big computer.
-    for i in 0..len {
-        for j in 0..len {
-            for k in 0..len {
+    for i in 0..len_n {
+        for j in 0..len_m {
+            for k in 0..len_l {
                 set.insert((i as u8, j as u8, k as u8));
             }
         }
@@ -84,10 +100,12 @@ pub fn matrix_to_set(matrix: &PlanePartition) -> PlanePartitonSet {
     )
 }
 
-pub fn set_to_matrix(set: &PlanePartitonSet, len: usize) -> PlanePartition {
+pub fn set_to_matrix(set: &PlanePartitonSet, len_n: usize, len_m: usize, len_l: usize) -> PlanePartition {
     let mut matrix = PlanePartition {
-        len,
-        data: vec![vec![0; len]; len],
+        n: len_n,
+        m: len_m,
+        l: len_l,
+        data: vec![vec![0; len_m]; len_m],
     };
 
     for &(i, j, k) in set.iter() {
@@ -100,6 +118,7 @@ pub fn set_to_matrix(set: &PlanePartitonSet, len: usize) -> PlanePartition {
 pub fn ungravity_matrix(matrix: &PlanePartition) -> PlanePartition {
     let mut mat: Vec<Vec<u8>> = vec![];
 
+    // NOTE: This should still work, it uses the len api
     // should ungravity the matrix
     for x in 0..matrix.len() {
         let mut vec: Vec<u8> = vec![];
@@ -118,7 +137,9 @@ pub fn ungravity_matrix(matrix: &PlanePartition) -> PlanePartition {
     }
 
     return PlanePartition {
-        len: matrix.len,
+        n: matrix.n,
+        m: matrix.m,
+        l: matrix.l,
         data: mat,
     };
 }
@@ -134,5 +155,5 @@ pub fn strongly_stable_to_totally_stable(matrix: &PlanePartition) -> PlanePartit
             set_rep.insert(*x);
         });
     }
-    set_to_matrix(&set_rep, matrix.len)
+    set_to_matrix(&set_rep, matrix.n, matrix.m, matrix.l)
 }

@@ -24,18 +24,21 @@ pub fn find_orbit(matrix: &PlanePartition) -> Vec<Vec<Vec<u8>>> {
 }
 
 pub fn rowmotion(matrix: &PlanePartition) -> PlanePartition {
-    let max = matrix.len as u8;
-    let len = matrix.len;
+    let len_n = matrix.n;
+    let len_m = matrix.m;
+    let len_l = matrix.l;
 
     let mut ret = PlanePartition {
-        len,
-        data: vec![vec![0; len]; len]
+        n: len_n,
+        m: len_m,
+        l: len_l,
+        data: vec![vec![0; len_n]; len_n]
     };
 
     let poss_min_not_in = matrix
         .clone()
         .into_iter()
-        .map(|row| row.into_iter().map(|x| (x + 1).clamp(0, max)).collect_vec())
+        .map(|row| row.into_iter().map(|x| (x + 1).clamp(0, len_l as u8)).collect_vec())
         .collect_vec();
 
     let min_not_in = poss_min_not_in.into_iter().enumerate().map(|(i, row)| {
@@ -53,17 +56,17 @@ pub fn rowmotion(matrix: &PlanePartition) -> PlanePartition {
     }).collect_vec();
 
 
-    for i in (0..len).rev() {
+    for i in (0..len_n).rev() {
         let mut min = 0;
-        for j in (0..len).rev() {
+        for j in (0..len_m).rev() {
             min = min.max(min_not_in[i][j]);
             ret[i][j] = min;
         }
     }
 
-    for j in (0..len).rev() {
+    for j in (0..len_n).rev() {
         let mut min = 0;
-        for i in (0..len).rev() {
+        for i in (0..len_m).rev() {
             min = min.max(min_not_in[i][j]).max(ret[i][j]);
             ret[i][j] = min;
         }
