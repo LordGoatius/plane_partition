@@ -3,12 +3,11 @@ use std::{collections::BTreeSet, usize};
 use pyo3::pyclass;
 
 pub mod impls;
-pub mod rowmotion;
-pub mod complement;
+pub mod pyfunctions;
 
 /// Struct representing a plane partition.
-#[pyclass]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[pyclass(eq, hash, frozen)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PlanePartition {
     /// n is the len of data
     pub n: usize,
@@ -28,38 +27,8 @@ pub struct PlanePartition {
 #[derive(Debug, Default, Clone)]
 pub struct PlanePartitonSet(BTreeSet<(u8, u8, u8)>);
 
-pub fn is_plane_partition(matrix: &PlanePartition) -> bool {
-    let len_n = matrix.n;
-    let len_m = matrix.m;
-    for i in 0..len_n {
-        for j in 0..len_m-1 {
-            if matrix[i][j] < matrix[i][j+1] {
-                return false;
-            }
-        }
-    }
-
-    for j in 0..len_n {
-        for i in 0..len_m-1 {
-            if matrix[i][j] < matrix[i+1][j] {
-                return false;
-            }
-        }
-    }
-
-    true
-}
-
 pub fn check_point_in_matrix(point: (u8, u8, u8), matrix: &PlanePartition) -> bool {
     return matrix[point.0 as usize][point.1 as usize] > point.2;
-}
-
-pub fn cardinality(matrix: &PlanePartition) -> usize {
-    matrix.clone()
-        .into_iter()
-        .flatten()
-        .map(|x| x as usize)
-        .sum::<usize>()
 }
 
 pub fn s3_one_point(point: (u8, u8, u8)) -> [(u8, u8, u8); 6] {
