@@ -74,7 +74,7 @@ pub fn set_to_matrix(set: &PlanePartitonSet, len_n: usize, len_m: usize, len_l: 
         n: len_n,
         m: len_m,
         l: len_l,
-        data: vec![vec![0; len_m]; len_m],
+        data: vec![vec![0; len_m]; len_n],
     };
 
     for &(i, j, k) in set.iter() {
@@ -89,9 +89,10 @@ pub fn ungravity_matrix(matrix: &PlanePartition) -> PlanePartition {
 
     // NOTE: This should still work, it uses the len api
     // should ungravity the matrix
-    for x in 0..matrix.len() {
+    for x in 0..matrix.n {
         let mut vec: Vec<u8> = vec![];
-        for y in 0..matrix[0].len() {
+        for y in 0..matrix.m {
+            // NOTE: Ungravity only useful for SSPP->TSPP, so max(x) == max(y)
             if matrix[y][x] == 0 {
                 vec.push(0);
             } else {

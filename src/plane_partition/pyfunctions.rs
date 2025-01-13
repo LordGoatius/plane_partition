@@ -1,5 +1,6 @@
-use pyo3::pymethods;
 use itertools::Itertools;
+use pyo3::exceptions::PyAttributeError;
+use pyo3::{pymethods, PyResult};
 
 use super::PlanePartition;
 use super::*;
@@ -14,7 +15,7 @@ impl PlanePartition {
             n: matrix.len(),
             m: matrix[0].len(),
             l: height,
-            data: matrix
+            data: matrix,
         }
     }
 
@@ -32,8 +33,11 @@ impl PlanePartition {
     }
 
     // TODO: All the plane partition methods
-    fn sspp_tp_tspp(&self) -> Self {
-        strongly_stable_to_totally_stable(self)
+    fn sspp_tp_tspp(&self) -> PyResult<PlanePartition> {
+        if (self.m != self.n) || (self.n != self.l) || (self.m != self.l) {
+            return Err(PyAttributeError::new_err("Cannot convert a non 'n x n x n' partition into a totally symmetric plane partition"));
+        }
+        Ok(strongly_stable_to_totally_stable(self))
     }
 
     fn to_tikz_diagram(&self) -> String {
@@ -49,29 +53,39 @@ impl PlanePartition {
             n: len_n,
             m: len_m,
             l: len_l,
-            data: vec![vec![0; len_n]; len_n]
+            data: vec![vec![0; len_m]; len_n],
         };
 
         let poss_min_not_in = self
             .clone()
             .into_iter()
-            .map(|row| row.into_iter().map(|x| (x + 1).clamp(0, len_l as u8)).collect_vec())
+            .map(|row| {
+                row.into_iter()
+                    .map(|x| (x + 1).clamp(0, len_l as u8))
+                    .collect_vec()
+            })
             .collect_vec();
 
-        let min_not_in = poss_min_not_in.into_iter().enumerate().map(|(i, row)| {
-            row.into_iter().enumerate().map(move |(j, elem)| {
-                let left = if j == 0 { u8::MAX } else { self[i][j - 1] };
-                let otop = if i == 0 { u8::MAX } else { self[i - 1][j] };
-                if elem == self[i][j] {
-                    0
-                } else if elem <= left && elem <= otop {
-                    elem
-                } else {
-                    0
-                }
-            }).collect_vec()
-        }).collect_vec();
-
+        let min_not_in = poss_min_not_in
+            .into_iter()
+            .enumerate()
+            .map(|(i, row)| {
+                row.into_iter()
+                    .enumerate()
+                    .map(move |(j, elem)| {
+                        let left = if j == 0 { u8::MAX } else { self[i][j - 1] };
+                        let otop = if i == 0 { u8::MAX } else { self[i - 1][j] };
+                        if elem == self[i][j] {
+                            0
+                        } else if elem <= left && elem <= otop {
+                            elem
+                        } else {
+                            0
+                        }
+                    })
+                    .collect_vec()
+            })
+            .collect_vec();
 
         for i in (0..len_n).rev() {
             let mut min = 0;
@@ -81,22 +95,19 @@ impl PlanePartition {
             }
         }
 
-        for j in (0..len_n).rev() {
+        for j in (0..len_m).rev() {
             let mut min = 0;
-            for i in (0..len_m).rev() {
+            for i in (0..len_n).rev() {
                 min = min.max(min_not_in[i][j]).max(ret[i][j]);
                 ret[i][j] = min;
             }
         }
 
         ret
-}
+    }
 
     fn cardinality(&self) -> usize {
-        self.iter()
-            .flatten()
-            .map(|&x| x as usize)
-            .sum::<usize>()
+        self.iter().flatten().map(|&x| x as usize).sum::<usize>()
     }
 
     fn rowmotion_orbit_length(&self) -> usize {
@@ -122,16 +133,16 @@ impl PlanePartition {
 
     fn is_plane_partition(&self) -> bool {
         for i in 0..self.n {
-            for j in 0..self.m-1 {
-                if self[i][j] < self[i][j+1] {
+            for j in 0..self.m - 1 {
+                if self[i][j] < self[i][j + 1] {
                     return false;
                 }
             }
         }
 
         for j in 0..self.n {
-            for i in 0..self.m-1 {
-                if self[i][j] < self[i+1][j] {
+            for i in 0..self.m - 1 {
+                if self[i][j] < self[i + 1][j] {
                     return false;
                 }
             }

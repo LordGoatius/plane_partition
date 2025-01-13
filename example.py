@@ -21,6 +21,17 @@ print(PlanePartition([[2, 1], [1, 0]], 2).to_tikz_diagram())
 
 print()
 
+a = PlanePartition([[2, 1, 1], [1, 1, 0]], 2)
+
+pprint(a.rowmotion_orbit())
+print()
+try:
+    print(a.sspp_tp_tspp())
+except AttributeError as e:
+    print(e)
+
+print()
+
 part = PlanePartition([[0,0,0],[0,0,0],[0,0,0]], 3)
 pprint(part.rowmotion_orbit())
 
